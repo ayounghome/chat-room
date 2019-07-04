@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <input type="text" id="name">
+    <button id="setname">设置</button>
+    <input type="text" id="text">
+    <button id="btn" type="button">发送</button>
+    <div id="container">
+
+    </div>
+    <script>
+        //send 向服务端发送消息
+        //ws.send('来自客户端的信息');
+
+        var ws = null;
+        // 绑定设置点击事件
+        document.getElementById('setname').onclick = function () {
+            // 获取 name 值
+            var name = document.getElementById('name').value;
+            // 判断 name 值是否为空，是则返回
+            if (name === '') return console.log('名字为空');
+            // 不是就连接ws
+            ws = new WebSocket('ws://localhost:2333');
+            // 向服务端推当前设置的 name （发消息时的name）
+            ws.onopen = function () {
+                ws.send(JSON.stringify({
+                    name: name,
+                    type: "setname"
+                }));
+            }
+
+            document.getElementById('btn').onclick = send;
+            // e 为事件对象，当事件触发就默认将数据传入给 e 
+            // onkeyup 事件会在键盘按键被松开时发生
+            document.getElementById('text').onkeyup = function(e){
+                //keyCode 是所按下的键对应的 Ascll 码  13是回车键
+                if (e.keyCode !== 13) return;
+                send();
+            }
+
+            ws.onmessage = function (e) {
+                var con = document.getElementById('container');
+                //将 <p> 添加到 .container 中
+                // inserBefore() 在子节点之前插入新元素  有两个参(要插入的元素，在那个元素之前)
+                con.insertBefore(createChatPanel(JSON.parse(e.data)),con.children[0]);
+            }
+            // setAttribute() 方法将属性该为disabled 禁用
+            document.getElementById('setname').setAttribute('disabled',true);
+        }
+
+        function  createChatPanel(data){
+            var name = data.name;
+            var text = data.text;
+
+            var div = document.createElement('div');
+            var span1 = document.createElement('span');
+            var span2 = document.createElement('span');
+
+            span1.innerHTML = name + ' ' +(new Date()).toString();
+            span2.innerHTML = text;
+
+            span1.style.color = '#00f';
+            span2.style.fontWeight = '900';
+
+            div.appendChild(span1);
+            div.appendChild(document.createElement('br'));
+            div.appendChild(span2);
+
+            return div;
+        }
+
+        function send(){
+            var text = document.getElementById('text');
+                if (text.value === '') return;
+                // 发消息时的text
+                ws.send(JSON.stringify({ 
+                    text: text.value, 
+                    type: "chat" 
+                }));
+                text.value = '';
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        /*
+        //连接建立时的 事件 （需要在服务端添加监听）
+        ws.onopen = function(){
+           
+        } 
+        //监听接收服务端的消息
+        ws.onmessage = function (e) {
+            // 创建 <p> 元素
+            var p = document.createElement('p');
+            // 将服务端获取的数据 赋予P
+            p.innerHTML = e.data;
+            //document.body 将属性返回到<body>元素，document.body.appendChild(p) 将 <p> 添加到 <body> 中
+            document.body.appendChild(p);
+        }*/
+    </script>
+</body>
+
+</html>
